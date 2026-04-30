@@ -19,3 +19,8 @@ class PaymentResponse(BaseModel):
     transaction_id: str
     amount: float
     currency: str
+
+class ErrorResponse(BaseModel):
+    error: str
+    message: str
+    idempotency_key: str

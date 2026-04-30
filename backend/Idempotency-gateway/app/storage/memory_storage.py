@@ -21,10 +21,17 @@ class MemoryStorage:
             return data["response"]
         return None
     
-    async def set(self, key: str, response: Dict[str, Any]) -> None:
-        """Store response for an idempotency key"""
+    async def get_request_hash(self, key: str) -> Optional[str]:
+        """Get the stored request hash for a key"""
+        if key in self._storage:
+            return self._storage[key].get("request_hash")
+        return None
+    
+    async def set(self, key: str, response: Dict[str, Any], request_hash: str) -> None:
+        """Store response and request hash for an idempotency key"""
         self._storage[key] = {
             "response": response,
+            "request_hash": request_hash,
             "expires_at": datetime.now() + timedelta(seconds=self.ttl_seconds)
         }
     
