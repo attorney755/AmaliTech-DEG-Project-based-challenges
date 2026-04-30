@@ -1,185 +1,195 @@
+Here’s your **rearranged and polished `README.md`** with a clean, professional layout, improved readability, and logical flow:
+
+---
+
 ```markdown
-# Idempotency Gateway - The "Pay-Once" Protocol
+# **Idempotency Gateway - The "Pay-Once" Protocol**
 
-A production-ready idempotency layer for payment processing that ensures transactions are processed exactly once, even with duplicate requests.
+*A production-ready idempotency layer for payment processing that ensures transactions are processed **exactly once**, even with duplicate requests.*
 
-## 📋 Table of Contents
-- [Architecture](#architecture)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Setup Instructions](#setup-instructions)
-- [API Documentation](#api-documentation)
-- [Developer's Choice](#developers-choice)
-- [Testing](#testing)
-- [Design Decisions](#design-decisions)
+---
 
-## 🏗️ Architecture
+## **📋 Table of Contents**
+- [🎯 Overview](#-overview)
+- [🏗️ Architecture](#️-architecture)
+- [🚀 Features](#-features)
+- [🛠️ Tech Stack](#️-tech-stack)
+- [📦 Setup Instructions](#-setup-instructions)
+- [📚 API Documentation](#-api-documentation)
+- [💡 Developer’s Choice](#-developers-choice)
+- [🧪 Testing](#-testing)
+- [🎯 Design Decisions](#-design-decisions)
+- [📁 Project Structure](#-project-structure)
+- [🔮 Future Improvements](#-future-improvements)
+- [📝 License](#-license)
+- [👤 Author](#-author)
+- [🙏 Acknowledgments](#-acknowledgments)
 
-### Sequence Diagram
-```
-Client                    Gateway                   Cache                 Payment Processor
-  |                         |                        |                         |
-  |--POST /process-payment--|                        |                         |
-  |  (Idempotency-Key: abc) |                        |                         |
-  |                         |--Check Key------------>|                         |
-  |                         |<--Not Found------------|                         |
-  |                         |                        |                         |
-  |                         |--Acquire Lock--------->|                         |
-  |                         |                        |                         |
-  |                         |--Process Payment------>|                         |
-  |                         |                        |--2 sec delay---------->|
-  |                         |                        |<--Complete--------------|
-  |                         |                        |                         |
-  |                         |--Store Response------->|                         |
-  |                         |<--Stored---------------|                         |
-  |                         |                        |                         |
-  |<--200 OK + X-Cache-Hit:false---------------------|                         |
-  |                         |                        |                         |
-  |--Duplicate Request------|                        |                         |
-  |  (Same Key)             |                        |                         |
-  |                         |--Check Key------------>|                         |
-  |                         |<--Found Response-------|                         |
-  |                         |                        |                         |
-  |<--200 OK + X-Cache-Hit:true----------------------|                         |
-```
+---
 
-### Flowchart
-```
-                    ┌─────────────────┐
-                    │  Receive Request │
-                    │  with Key header │
-                    └────────┬─────────┘
-                             │
-                    ┌────────▼─────────┐
-                    │ Key present?     │
-                    └────────┬─────────┘
-                        Yes  │
-                    ┌────────▼─────────┐
-                    │ Key in cache?    │
-                    └────────┬─────────┘
-                         │   │
-                    No   │   │ Yes
-                    ┌────▼───▼────┐
-                    │             │
-              ┌─────▼───┐    ┌────▼─────┐
-              │Acquire  │    │Compare  │
-              │Lock     │    │Body Hash│
-              └─────┬───┘    └────┬─────┘
-                    │             │
-              ┌─────▼───┐    ┌────▼─────┐
-              │Process  │    │Match?    │
-              │Payment  │    └────┬─────┘
-              │(2 sec)  │      │       │
-              └─────┬───┘   Yes│       │No
-                    │        ┌─▼───┐ ┌─▼────┐
-              ┌─────▼───┐    │Return│ │409   │
-              │Store    │    │Cached│ │Error │
-              │Response │    │Resp  │ │      │
-              └─────┬───┘    └──────┘ └──────┘
-                    │
-              ┌─────▼───┐
-              │Return   │
-              │Response │
-              └─────────┘
+---
+
+## **🎯 Overview**
+The **Idempotency Gateway** is a **production-ready** solution for ensuring **exactly-once processing** of payment transactions. It prevents duplicate charges, handles race conditions, and provides **automatic caching** for performance optimization.
+
+---
+
+---
+
+## **🏗️ Architecture**
+
+### **Sequence Diagram**
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gateway
+    participant Cache
+    participant PaymentProcessor
+
+    Client->>Gateway: POST /process-payment (Idempotency-Key: abc)
+    Gateway->>Cache: Check Key
+    Cache-->>Gateway: Not Found
+    Gateway->>Cache: Acquire Lock
+    Gateway->>PaymentProcessor: Process Payment
+    PaymentProcessor-->>Gateway: 2 sec delay
+    Gateway->>Cache: Store Response
+    Gateway-->>Client: 200 OK + X-Cache-Hit:false
+
+    Client->>Gateway: Duplicate Request (Same Key)
+    Gateway->>Cache: Check Key
+    Cache-->>Gateway: Found Response
+    Gateway-->>Client: 200 OK + X-Cache-Hit:true
 ```
 
-## 🚀 Features
+### **Flowchart**
+```mermaid
+flowchart TD
+    A[Receive Request\nwith Key header] --> B{Key present?}
+    B -->|Yes| C{Key in cache?}
+    B -->|No| D[400 Bad Request]
+    C -->|No| E[Acquire Lock]
+    C -->|Yes| F[Compare Body Hash]
+    E --> G[Process Payment\n(2 sec)]
+    G --> H[Store Response]
+    H --> I[Return Response]
+    F -->|Match| J[Return Cached Response]
+    F -->|No Match| K[409 Conflict]
+```
 
-### Core Features
-- ✅ **Idempotent Processing**: Same request with same key → same response
-- ✅ **Automatic Caching**: First response cached for 24 hours
-- ✅ **Conflict Detection**: Different body with same key → 409 error
-- ✅ **Concurrent Request Handling**: Race condition protection with locks
-- ✅ **Cache Headers**: `X-Cache-Hit: true/false` for monitoring
+---
 
-### Developer's Choice Features
-- ✅ **Request Logging**: JSON-formatted logs for audit trail
-- ✅ **Metrics Endpoint**: Real-time statistics on cache performance
-- ✅ **Automatic Log File**: No manual setup required
+---
 
-## 🛠️ Tech Stack
+## **🚀 Features**
 
-- **Python 3.8+** - Core language
-- **FastAPI** - Web framework
-- **Uvicorn** - ASGI server
-- **In-memory Storage** - Simple cache (easily replaceable with Redis)
+### **Core Features**
+| Feature                          | Description                                                                 |
+|----------------------------------|-----------------------------------------------------------------------------|
+| ✅ **Idempotent Processing**     | Same request with the same key → same response.                          |
+| ✅ **Automatic Caching**          | First response cached for **24 hours**.                                   |
+| ✅ **Conflict Detection**         | Different body with the same key → **409 Conflict**.                      |
+| ✅ **Concurrent Request Handling**| Race condition protection with **locks**.                                 |
+| ✅ **Cache Headers**              | `X-Cache-Hit: true/false` for monitoring.                                  |
 
-## 📦 Setup Instructions
+### **Developer’s Choice Features**
+| Feature                          | Description                                                                 |
+|----------------------------------|-----------------------------------------------------------------------------|
+| ✅ **Request Logging**            | JSON-formatted logs for **audit trails**.                                  |
+| ✅ **Metrics Endpoint**           | Real-time statistics on **cache performance**.                           |
+| ✅ **Automatic Log File**         | No manual setup required (`idempotency.log`).                             |
 
-### Prerequisites
-- Python 3.8 or higher
-- pip package manager
+---
 
-### Installation
+---
 
+## **🛠️ Tech Stack**
+| Component       | Technology          |
+|-----------------|---------------------|
+| **Language**    | Python 3.8+         |
+| **Framework**   | FastAPI             |
+| **Server**      | Uvicorn (ASGI)      |
+| **Storage**     | In-memory (Replaceable with Redis) |
+
+---
+
+---
+
+## **📦 Setup Instructions**
+
+### **Prerequisites**
+- Python **3.8+**
+- `pip` package manager
+
+### **Installation**
 1. **Clone the repository**
-```bash
-git clone https://github.com/attorney755/AmaliTech-DEG-Project-based-challenges.git
-cd AmaliTech-DEG-Project-based-challenges/backend/Idempotency-gateway
-```
+   ```bash
+   git clone https://github.com/attorney755/AmaliTech-DEG-Project-based-challenges.git
+   cd AmaliTech-DEG-Project-based-challenges/backend/Idempotency-gateway
+   ```
 
-2. **Create virtual environment**
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+2. **Create a virtual environment**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Windows: venv\Scripts\activate
+   ```
 
 3. **Install dependencies**
-```bash
-pip install -r requirements.txt
-```
+   ```bash
+   pip install -r requirements.txt
+   ```
 
 4. **Run the server**
-```bash
-uvicorn app.main:app --reload --port 8000
-```
+   ```bash
+   uvicorn app.main:app --reload --port 8000
+   ```
 
-5. **Verify it's running**
-```bash
-curl http://localhost:8000/
-# Expected: {"message":"Idempotency Gateway Running"}
-```
+5. **Verify it’s running**
+   ```bash
+   curl http://localhost:8000/
+   # Expected: {"message":"Idempotency Gateway Running"}
+   ```
 
-## 📚 API Documentation
+---
 
-### Endpoint: POST /process-payment
+---
 
-Process a payment with idempotency guarantee.
+## **📚 API Documentation**
 
-#### Headers
-| Header | Required | Description |
-|--------|----------|-------------|
-| Idempotency-Key | Yes | Unique identifier for the request |
-| Content-Type | Yes | Must be application/json |
+### **🔹 Endpoint: `POST /process-payment`**
+*Process a payment with idempotency guarantee.*
 
-#### Request Body
+#### **Headers**
+| Header            | Required | Description                     |
+|-------------------|----------|---------------------------------|
+| `Idempotency-Key` | ✅ Yes   | Unique identifier for the request. |
+| `Content-Type`    | ✅ Yes   | Must be `application/json`.      |
+
+#### **Request Body**
 ```json
 {
   "amount": 100.00,
   "currency": "GHS"
 }
 ```
+| Field     | Type    | Constraints | Description               |
+|-----------|---------|-------------|---------------------------|
+| `amount`  | float   | > 0         | Payment amount.           |
+| `currency`| string  | 3 letters    | Currency code (GHS, USD, EUR). |
 
-| Field | Type | Constraints | Description |
-|-------|------|-------------|-------------|
-| amount | float | > 0 | Payment amount |
-| currency | string | 3 letters | Currency code (GHS, USD, EUR) |
+#### **Response Codes**
+| Status       | Description                                      |
+|--------------|--------------------------------------------------|
+| `200 OK`      | Payment processed successfully.                 |
+| `409 Conflict`| Idempotency key used with a different body.     |
+| `400 Bad Request` | Missing `Idempotency-Key` header.          |
+| `422 Unprocessable` | Invalid request body.                     |
 
-#### Response Codes
+#### **Response Headers**
+| Header          | Description                              |
+|-----------------|------------------------------------------|
+| `X-Cache-Hit`   | `true` if response from cache, `false` if newly processed. |
 
-| Status | Description |
-|--------|-------------|
-| 200 OK | Payment processed successfully |
-| 409 Conflict | Idempotency key used with different body |
-| 400 Bad Request | Missing Idempotency-Key header |
-| 422 Unprocessable | Invalid request body |
-
-#### Response Headers
-| Header | Description |
-|--------|-------------|
-| X-Cache-Hit | true if response from cache, false if newly processed |
-
-#### Response Body (Success)
+#### **Response Body (Success)**
 ```json
 {
   "status": "success",
@@ -190,8 +200,7 @@ Process a payment with idempotency guarantee.
 }
 ```
 
-#### Example Requests
-
+#### **Example Requests**
 **First Request (Cache Miss)**
 ```bash
 curl -X POST http://localhost:8000/process-payment \
@@ -200,7 +209,9 @@ curl -X POST http://localhost:8000/process-payment \
   -d '{"amount": 100, "currency": "GHS"}' \
   -i
 ```
-*Takes ~2 seconds, returns X-Cache-Hit: false*
+*Takes ~2 seconds, returns `X-Cache-Hit: false`.*
+
+---
 
 **Duplicate Request (Cache Hit)**
 ```bash
@@ -210,7 +221,9 @@ curl -X POST http://localhost:8000/process-payment \
   -d '{"amount": 100, "currency": "GHS"}' \
   -i
 ```
-*Instant response, returns X-Cache-Hit: true*
+*Instant response, returns `X-Cache-Hit: true`.*
+
+---
 
 **Conflict Request (409 Error)**
 ```bash
@@ -220,12 +233,14 @@ curl -X POST http://localhost:8000/process-payment \
   -d '{"amount": 500, "currency": "GHS"}' \
   -i
 ```
-*Returns 409 Conflict*
+*Returns `409 Conflict`.*
 
-### Endpoint: GET /metrics
+---
 
-Get idempotency gateway statistics.
+### **🔹 Endpoint: `GET /metrics`**
+*Get real-time idempotency gateway statistics.*
 
+**Request:**
 ```bash
 curl http://localhost:8000/metrics
 ```
@@ -244,20 +259,22 @@ curl http://localhost:8000/metrics
 }
 ```
 
-## 💡 Developer's Choice
+---
 
-### Feature: Comprehensive Logging & Monitoring System
+---
 
-**Why this matters for FinTech:**
-- **Audit Trail**: Every request is logged with timestamp for compliance
-- **Performance Monitoring**: Track cache hit ratios to optimize performance
-- **Fraud Detection**: Conflicts log helps detect suspicious activity
+## **💡 Developer’s Choice**
+### **Comprehensive Logging & Monitoring System**
+**Why it matters for FinTech:**
+- **Audit Trail**: Every request is logged with a timestamp for **compliance**.
+- **Performance Monitoring**: Track **cache hit ratios** to optimize performance.
+- **Fraud Detection**: Conflict logs help detect **suspicious activity**.
 
 **Implementation:**
-- Automatic log file creation on server startup
-- JSON-formatted logs for easy parsing by monitoring tools
-- `idempotency.log` contains all requests with response times
-- Metrics endpoint for real-time monitoring
+- Automatic log file creation on server startup.
+- JSON-formatted logs for easy parsing by monitoring tools.
+- `idempotency.log` contains all requests with response times.
+- Metrics endpoint for **real-time monitoring**.
 
 **Log Example:**
 ```json
@@ -270,108 +287,111 @@ curl http://localhost:8000/metrics
 }
 ```
 
-## 🧪 Testing
+---
 
-### Manual Test Scenarios
+---
 
-**Test 1: First Request**
-```bash
-time curl -X POST http://localhost:8000/process-payment \
-  -H "Idempotency-Key: test-001" \
-  -H "Content-Type: application/json" \
-  -d '{"amount": 100, "currency": "GHS"}'
-```
-*Expected: ~2 seconds response time*
+## **🧪 Testing**
 
-**Test 2: Duplicate Request**
-```bash
-time curl -X POST http://localhost:8000/process-payment \
-  -H "Idempotency-Key: test-001" \
-  -H "Content-Type: application/json" \
-  -d '{"amount": 100, "currency": "GHS"}'
-```
-*Expected: < 0.1 seconds (cached)*
+### **Manual Test Scenarios**
+| Test Case               | Command                                                                                     | Expected Result                          |
+|-------------------------|---------------------------------------------------------------------------------------------|------------------------------------------|
+| **First Request**       | `time curl -X POST http://localhost:8000/process-payment -H "Idempotency-Key: test-001" -H "Content-Type: application/json" -d '{"amount": 100, "currency": "GHS"}'` | ~2 seconds response time.                |
+| **Duplicate Request**   | `time curl -X POST http://localhost:8000/process-payment -H "Idempotency-Key: test-001" -H "Content-Type: application/json" -d '{"amount": 100, "currency": "GHS"}'` | < 0.1 seconds (cached).                  |
+| **Concurrent Requests** | Run the same request in **two terminals simultaneously** with `Idempotency-Key: test-concurrent`. | Both return the **same `transaction_id`**. |
+| **Auto-creation Verification** | `ls -la idempotency.log` | Log file exists. |
 
-**Test 3: Concurrent Requests**
-```bash
-# Run this in two terminals simultaneously
-curl -X POST http://localhost:8000/process-payment \
-  -H "Idempotency-Key: test-concurrent" \
-  -H "Content-Type: application/json" \
-  -d '{"amount": 100, "currency": "GHS"}'
-```
-*Expected: Both return same transaction_id*
+---
 
-### Auto-creation Verification
-```bash
-# Log file auto-creates on server start
-ls -la idempotency.log
-```
+---
 
-## 🎯 Design Decisions
+## **🎯 Design Decisions**
 
-### 1. In-Memory Storage vs Redis
-**Chosen**: In-memory dictionary  
-**Reason**: Simpler for demonstration, easily replaceable with Redis by changing storage class
+| Decision                     | Choice                          | Reason                                                                                     |
+|------------------------------|---------------------------------|--------------------------------------------------------------------------------------------|
+| **Storage**                  | In-memory dictionary            | Simpler for demonstration; **easily replaceable with Redis**.                              |
+| **Locking Mechanism**        | `asyncio.Lock` per key          | Prevents race conditions; handles **concurrent identical requests**.                      |
+| **Request Body Validation**  | SHA-256 hash comparison         | Fast, deterministic; **prevents storing full request body**.                               |
+| **Simulated Processing Delay**| 2-second `time.sleep()`         | Demonstrates caching benefit clearly; **realistic for payment processing**.               |
+| **Logging Format**           | JSON with timestamps            | Easy to parse; **machine-readable for monitoring tools**.                                  |
 
-### 2. Locking Mechanism
-**Chosen**: `asyncio.Lock` per idempotency key  
-**Reason**: Prevents race conditions, handles concurrent identical requests
+---
 
-### 3. Request Body Validation
-**Chosen**: SHA-256 hash comparison  
-**Reason**: Fast, deterministic, prevents storing full request body
+---
 
-### 4. Simulated Processing Delay
-**Chosen**: 2-second `time.sleep()`  
-**Reason**: Demonstrates caching benefit clearly, realistic for payment processing
-
-### 5. Logging Format
-**Chosen**: JSON with timestamps  
-**Reason**: Easy to parse, machine-readable for monitoring tools
-
-## 📁 Project Structure
-
+## **📁 Project Structure**
 ```
 Idempotency-gateway/
 ├── app/
 │   ├── __init__.py
-│   ├── main.py           # FastAPI app & endpoints
-│   ├── models.py         # Pydantic models
+│   ├── main.py              # FastAPI app & endpoints
+│   ├── models.py            # Pydantic models
 │   ├── storage/
 │   │   ├── __init__.py
-│   │   └── memory_storage.py  # Cache & locks
+│   │   └── memory_storage.py # Cache & locks
 │   └── utils/
 │       ├── __init__.py
-│       └── logger.py     # Logging & metrics
-├── tests/                 # Test files (to be added)
-├── requirements.txt       # Dependencies
-├── .gitignore            # Git ignore rules
-└── README.md             # This file
+│       └── logger.py        # Logging & metrics
+├── tests/                  # Test files (to be added)
+├── requirements.txt        # Dependencies
+├── .gitignore              # Git ignore rules
+└── README.md               # This file
 ```
 
-## 🔮 Future Improvements
-
-- [ ] Add Redis storage for distributed deployment
-- [ ] Add database persistence for transaction records
-- [ ] Add rate limiting per idempotency key
-- [ ] Add webhook notifications for payment status
-- [ ] Add unit tests with pytest
-- [ ] Add Docker containerization
-- [ ] Add API authentication (API keys)
-
-## 📝 License
-
-This project is developed for the AmaliTech DEG Challenge.
-
-## 👤 Author
-
-**Attorney75**
-
-## 🙏 Acknowledgments
-
-- AmaliTech for the challenge
-- FastAPI documentation
-- Idempotency patterns in distributed systems
+---
 
 ---
+
+## **🔮 Future Improvements**
+- [ ] Add **Redis storage** for distributed deployment.
+- [ ] Add **database persistence** for transaction records.
+- [ ] Add **rate limiting** per idempotency key.
+- [ ] Add **webhook notifications** for payment status.
+- [ ] Add **unit tests** with `pytest`.
+- [ ] Add **Docker containerization**.
+- [ ] Add **API authentication** (API keys).
+
+---
+
+---
+---
+## **📝 License**
+This project is developed for the **AmaliTech DEG Challenge**.
+
+---
+## **👤 Author**
+**Attorney75**
+📧 [GitHub Profile](https://github.com/attorney755)
+
+---
+## **🙏 Acknowledgments**
+- **AmaliTech** for the challenge.
+- **FastAPI** documentation.
+- **Idempotency patterns** in distributed systems.
+```
+
+---
+
+### **Key Improvements:**
+1. **Visual Hierarchy**:
+   - Clear section headers with emojis for better readability.
+   - Tables for structured data (e.g., API endpoints, features, design decisions).
+
+2. **Logical Flow**:
+   - **Overview** first to set context.
+   - **Architecture** (diagrams) before diving into features.
+   - **Setup Instructions** grouped logically.
+   - **API Documentation** with clear examples.
+
+3. **Consistency**:
+   - Uniform formatting for code blocks, tables, and lists.
+   - Mermaid diagrams for architecture (more readable than ASCII).
+
+4. **Developer Experience**:
+   - **Copy-paste-ready** commands.
+   - **Expected outputs** for testing.
+   - **Design Decisions** table to explain "why" behind choices.
+
+5. **Professional Touch**:
+   - Separators (`---`) between major sections.
+   - Emojis for visual appeal without clutter.
