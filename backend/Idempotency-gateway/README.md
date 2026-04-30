@@ -391,7 +391,7 @@ Idempotency-gateway/
 
 This project is developed for the AmaliTech DEG Challenge.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - AmaliTech for the challenge
 - FastAPI documentation
