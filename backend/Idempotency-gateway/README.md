@@ -3,16 +3,6 @@
 
 A production-ready idempotency layer for payment processing that ensures transactions are processed exactly once, even with duplicate requests.
 
-## 📋 Table of Contents
-- [Architecture](#architecture)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Setup Instructions](#setup-instructions)
-- [API Documentation](#api-documentation)
-- [Developer's Choice](#developers-choice)
-- [Testing](#testing)
-- [Design Decisions](#design-decisions)
-
 ## 🏗️ Architecture
 
 ### Sequence Diagram
@@ -122,28 +112,28 @@ sequenceDiagram
     Note over R1,R2: Both get same transaction_id<br/>Only one payment processed
 ```
 
-## 🚀 Features
+## Features
 
 ### Core Features
-- ✅ **Idempotent Processing**: Same request with same key → same response
-- ✅ **Automatic Caching**: First response cached for 24 hours
-- ✅ **Conflict Detection**: Different body with same key → 409 error
-- ✅ **Concurrent Request Handling**: Race condition protection with locks
-- ✅ **Cache Headers**: `X-Cache-Hit: true/false` for monitoring
+- **Idempotent Processing**: Same request with same key → same response
+- **Automatic Caching**: First response cached for 24 hours
+- **Conflict Detection**: Different body with same key → 409 error
+- **Concurrent Request Handling**: Race condition protection with locks
+- **Cache Headers**: `X-Cache-Hit: true/false` for monitoring
 
 ### Developer's Choice Features
-- ✅ **Request Logging**: JSON-formatted logs for audit trail
-- ✅ **Metrics Endpoint**: Real-time statistics on cache performance
-- ✅ **Automatic Log File**: No manual setup required
+- **Request Logging**: JSON-formatted logs for audit trail
+- **Metrics Endpoint**: Real-time statistics on cache performance
+- **Automatic Log File**: No manual setup required
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 - **Python 3.8+** - Core language
 - **FastAPI** - Web framework
 - **Uvicorn** - ASGI server
 - **In-memory Storage** - Simple cache (easily replaceable with Redis)
 
-## 📦 Setup Instructions
+## Setup Instructions
 
 ### Prerequisites
 - Python 3.8 or higher
@@ -179,7 +169,7 @@ curl http://localhost:8000/
 # Expected: {"message":"Idempotency Gateway Running"}
 ```
 
-## 📚 API Documentation
+## API Documentation
 
 ### Endpoint: POST /process-payment
 
@@ -283,7 +273,7 @@ curl http://localhost:8000/metrics
 }
 ```
 
-## 💡 Developer's Choice
+## Developer's Choice
 
 ### Feature: Comprehensive Logging & Monitoring System
 
@@ -309,7 +299,7 @@ curl http://localhost:8000/metrics
 }
 ```
 
-## 🧪 Testing
+## Testing
 
 ### Manual Test Scenarios
 
@@ -351,7 +341,7 @@ curl http://localhost:8000/metrics
 cat idempotency.log
 ```
 
-## 🎯 Design Decisions
+## Design Decisions
 
 ### 1. In-Memory Storage vs Redis
 **Chosen**: In-memory dictionary  
@@ -377,7 +367,7 @@ cat idempotency.log
 **Chosen**: Programmatic file creation on startup  
 **Reason**: Zero manual setup for users, professional UX
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 Idempotency-gateway/
@@ -397,11 +387,11 @@ Idempotency-gateway/
 └── README.md             # This file
 ```
 
-## 📝 License
+## License
 
 This project is developed for the AmaliTech DEG Challenge.
 
-## 👤 Author
+## Author
 
 **attorney755**
 
