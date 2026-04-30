@@ -391,10 +391,6 @@ Idempotency-gateway/
 
 This project is developed for the AmaliTech DEG Challenge.
 
-## Author
-
-**attorney755**
-
 ## 🙏 Acknowledgments
 
 - AmaliTech for the challenge
